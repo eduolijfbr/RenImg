@@ -25,6 +25,11 @@ export interface RenameConfig {
   overwrite: boolean;
   prefix: string;
   suffix: string;
+  // Resize Configuration
+  enableResize: boolean;
+  resizeWidth: number; // Target width in pixels
+  resizeQuality: number; // JPEG quality 1-100
+  keepOriginals: boolean; // Keep original files vs replace
 }
 
 export interface ProcessedFile extends ImageFile {

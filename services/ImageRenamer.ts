@@ -1,7 +1,8 @@
 import { ImageFile, ProcessedFile, RenameConfig, FileStatus } from '../types';
+import { ImageResizer } from './ImageResizer';
 
 export class ImageRenamer {
-  
+
   /**
    * Generates a preview of the renaming operation based on the current config.
    */
@@ -22,9 +23,9 @@ export class ImageRenamer {
       // Simple conflict detection logic
       if (usedNames.has(fullNewName.toLowerCase())) {
         if (!config.overwrite) {
-           // Auto-resolve conflict if not overwrite
-           status = FileStatus.ERROR;
-           errorMessage = "Conflict: Filename already exists in destination";
+          // Auto-resolve conflict if not overwrite
+          status = FileStatus.ERROR;
+          errorMessage = "Conflict: Filename already exists in destination";
         }
       }
 
@@ -75,7 +76,11 @@ export class ImageRenamer {
   /**
    * Executes the REAL rename operation on the file system.
    */
-  public async executeRename(file: ProcessedFile, dirHandle: FileSystemDirectoryHandle): Promise<void> {
+  public async executeRename(
+    file: ProcessedFile,
+    dirHandle: FileSystemDirectoryHandle,
+    config: RenameConfig
+  ): Promise<void> {
     if (!file.handle || !dirHandle) {
       throw new Error("Missing file system permissions or handles.");
     }
@@ -83,38 +88,72 @@ export class ImageRenamer {
     const fullNewName = file.newName + file.extension;
     const fullOldName = file.originalName + file.extension;
 
-    // Skip if name hasn't changed
-    if (fullNewName === fullOldName) {
-      return; 
+    // Skip if name hasn't changed and no resize is needed
+    if (fullNewName === fullOldName && !config.enableResize) {
+      return;
     }
 
     try {
+      let fileContent: File | Blob;
+
+      // Handle resizing if enabled
+      if (config.enableResize) {
+        const resizer = new ImageResizer();
+        const originalFile = await file.handle.getFile();
+
+        // Only resize if image is larger than target
+        const shouldResize = await resizer.shouldResize(originalFile, config.resizeWidth);
+
+        if (shouldResize) {
+          fileContent = await resizer.resizeImage(
+            originalFile,
+            config.resizeWidth,
+            config.resizeQuality
+          );
+        } else {
+          fileContent = originalFile;
+        }
+      } else {
+        fileContent = await file.handle.getFile();
+      }
+
+      // Determine target filename
+      let targetFileName = fullNewName;
+
+      // If keeping originals and resize is enabled, append suffix
+      if (config.keepOriginals && config.enableResize) {
+        const namePart = file.newName;
+        const ext = file.extension;
+        targetFileName = `${namePart}_resized${ext}`;
+      }
+
       // Strategy: Since "rename" isn't a simple command in all implementations yet,
       // and .move() is experimental, the robust web way is:
       // 1. Create new file handle
       // 2. Copy content
-      // 3. Delete old file
+      // 3. Delete old file (if not keeping originals)
 
       // @ts-ignore - Check for experimental 'move' support (Chrome 111+)
-      if (file.handle.move) {
+      if (file.handle.move && !config.enableResize && !config.keepOriginals) {
         // @ts-ignore
         await file.handle.move(fullNewName);
       } else {
         // Fallback: Copy and Delete
-        
+
         // 1. Get/Create new file
-        const newFileHandle = await dirHandle.getFileHandle(fullNewName, { create: true });
-        
+        const newFileHandle = await dirHandle.getFileHandle(targetFileName, { create: true });
+
         // 2. Write data
-        const oldFile = await file.handle.getFile();
         const writable = await newFileHandle.createWritable();
-        await writable.write(oldFile);
+        await writable.write(fileContent);
         await writable.close();
 
-        // 3. Remove old file
-        await dirHandle.removeEntry(fullOldName);
+        // 3. Remove old file only if NOT keeping originals
+        if (!config.keepOriginals && targetFileName !== fullOldName) {
+          await dirHandle.removeEntry(fullOldName);
+        }
       }
-      
+
     } catch (err) {
       console.error(`Failed to rename ${file.originalName}`, err);
       throw err;

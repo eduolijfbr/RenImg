@@ -22,7 +22,7 @@ export const translations = {
     previewTitle: 'Preview Results',
     modifying: 'Modifying',
     files: 'files',
-    
+
     // File List
     noFilesTitle: 'No images selected',
     noFilesSub: 'Select a directory to begin',
@@ -31,11 +31,17 @@ export const translations = {
     headerOriginal: 'Original Name',
     headerNew: 'New Name',
     headerSize: 'Size',
-    
+
     // Tooltips
     seqTooltip: 'Sequence Number',
     origTooltip: 'Original Filename',
-    dateTooltip: 'Creation Date'
+    dateTooltip: 'Creation Date',
+
+    // Resize
+    resizeLabel: 'Resize Images',
+    resizeSizeLabel: 'Image Width',
+    resizeQualityLabel: 'Quality',
+    keepOriginalsLabel: 'Keep Original Files'
   },
   pt: {
     appTitle: 'Renomear',
@@ -68,7 +74,13 @@ export const translations = {
 
     seqTooltip: 'Número Sequencial',
     origTooltip: 'Nome do Arquivo Original',
-    dateTooltip: 'Data de Criação'
+    dateTooltip: 'Data de Criação',
+
+    // Resize
+    resizeLabel: 'Redimensionar Imagens',
+    resizeSizeLabel: 'Largura da Imagem',
+    resizeQualityLabel: 'Qualidade',
+    keepOriginalsLabel: 'Manter Arquivos Originais'
   },
   es: {
     appTitle: 'Renombrar',
@@ -101,7 +113,13 @@ export const translations = {
 
     seqTooltip: 'Número Secuencial',
     origTooltip: 'Nombre Original',
-    dateTooltip: 'Fecha de Creación'
+    dateTooltip: 'Fecha de Creación',
+
+    // Resize
+    resizeLabel: 'Redimensionar Imágenes',
+    resizeSizeLabel: 'Ancho de Imagen',
+    resizeQualityLabel: 'Calidad',
+    keepOriginalsLabel: 'Mantener Archivos Originales'
   },
   fr: {
     appTitle: 'Renommer',
@@ -134,7 +152,13 @@ export const translations = {
 
     seqTooltip: 'Numéro Séquentiel',
     origTooltip: 'Nom Original',
-    dateTooltip: 'Date de Création'
+    dateTooltip: 'Date de Création',
+
+    // Resize
+    resizeLabel: 'Redimensionner Images',
+    resizeSizeLabel: 'Largeur d\'Image',
+    resizeQualityLabel: 'Qualité',
+    keepOriginalsLabel: 'Conserver Fichiers Originaux'
   },
   de: {
     appTitle: 'Umbenennen',
@@ -167,6 +191,12 @@ export const translations = {
 
     seqTooltip: 'Laufende Nummer',
     origTooltip: 'Originaldateiname',
-    dateTooltip: 'Erstellungsdatum'
+    dateTooltip: 'Erstellungsdatum',
+
+    // Resize
+    resizeLabel: 'Bilder Skalieren',
+    resizeSizeLabel: 'Bildbreite',
+    resizeQualityLabel: 'Qualität',
+    keepOriginalsLabel: 'Originaldateien Behalten'
   }
 };

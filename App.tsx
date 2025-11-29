@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FolderOpen, Play, RefreshCw, Settings, Info, Check, Moon, Sun, Globe } from 'lucide-react';
+import { FolderOpen, Play, RefreshCw, Settings, Info, Check, Moon, Sun, Globe, Sliders } from 'lucide-react';
 import { ImageScanner } from './services/ImageScanner';
 import { ImageRenamer } from './services/ImageRenamer';
 import { ImageFile, ProcessedFile, RenameConfig, FileStatus } from './types';
@@ -48,6 +48,11 @@ const App: React.FC = () => {
     overwrite: false,
     prefix: '',
     suffix: '',
+    // Resize defaults
+    enableResize: false,
+    resizeWidth: 1920,
+    resizeQuality: 85,
+    keepOriginals: false,
   });
 
   // Apply Theme
@@ -137,7 +142,7 @@ const App: React.FC = () => {
       // Skip errors or files that shouldn't be touched
       if (file.status !== FileStatus.ERROR) {
         try {
-          await renamer.executeRename(file, dirHandle);
+          await renamer.executeRename(file, dirHandle, config);
 
           // Update state for success
           setProcessedFiles(prev => {
@@ -303,6 +308,77 @@ const App: React.FC = () => {
                 <span className="text-sm text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{t.overwriteLabel}</span>
               </label>
             </div>
+
+            {/* Resize Section */}
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-slate-800">
+              <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Sliders size={14} /> {t.resizeLabel}
+              </h3>
+
+              {/* Enable Resize Toggle */}
+              <label className="flex items-center gap-3 cursor-pointer group mb-4">
+                <div className={`w-10 h-5 rounded-full relative transition-colors ${config.enableResize ? 'bg-primary' : 'bg-gray-300 dark:bg-slate-700'}`}>
+                  <input type="checkbox" className="hidden" checked={config.enableResize} onChange={(e) => setConfig({ ...config, enableResize: e.target.checked })} />
+                  <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform ${config.enableResize ? 'translate-x-5' : ''}`} />
+                </div>
+                <span className="text-sm text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{t.resizeLabel}</span>
+              </label>
+
+              {/* Resize Width Slider */}
+              {config.enableResize && (
+                <div className="space-y-4 animate-in fade-in duration-300">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-xs font-medium text-slate-500 dark:text-slate-400">{t.resizeSizeLabel}</label>
+                      <span className="text-xs font-mono bg-primary/10 text-primary px-2 py-0.5 rounded">{config.resizeWidth}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="100"
+                      max="4000"
+                      step="50"
+                      value={config.resizeWidth}
+                      onChange={(e) => setConfig({ ...config, resizeWidth: parseInt(e.target.value) })}
+                      className="w-full h-2 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary"
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+                      <span>100px</span>
+                      <span>4000px</span>
+                    </div>
+                  </div>
+
+                  {/* Quality Slider */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-xs font-medium text-slate-500 dark:text-slate-400">{t.resizeQualityLabel}</label>
+                      <span className="text-xs font-mono bg-accent/10 text-accent px-2 py-0.5 rounded">{config.resizeQuality}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      step="1"
+                      value={config.resizeQuality}
+                      onChange={(e) => setConfig({ ...config, resizeQuality: parseInt(e.target.value) })}
+                      className="w-full h-2 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-accent"
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+                      <span>1%</span>
+                      <span>100%</span>
+                    </div>
+                  </div>
+
+                  {/* Keep Originals Checkbox */}
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${config.keepOriginals ? 'bg-green-500 border-green-500' : 'border-gray-400 dark:border-slate-600 bg-gray-100 dark:bg-slate-800'}`}>
+                      <input type="checkbox" className="hidden" checked={config.keepOriginals} onChange={(e) => setConfig({ ...config, keepOriginals: e.target.checked })} />
+                      {config.keepOriginals && <Check size={10} className="text-white" />}
+                    </div>
+                    <span className="text-sm text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{t.keepOriginalsLabel}</span>
+                  </label>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Stats Panel */}
@@ -316,8 +392,8 @@ const App: React.FC = () => {
               onClick={handleRename}
               disabled={files.length === 0 || isProcessing}
               className={`w-full py-3 rounded-xl font-semibold shadow-lg transition-all flex items-center justify-center gap-2 ${files.length === 0 || isProcessing
-                  ? 'bg-gray-300 dark:bg-slate-800 text-gray-500 dark:text-slate-500 cursor-not-allowed'
-                  : 'bg-primary hover:bg-blue-600 text-white hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]'
+                ? 'bg-gray-300 dark:bg-slate-800 text-gray-500 dark:text-slate-500 cursor-not-allowed'
+                : 'bg-primary hover:bg-blue-600 text-white hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]'
                 }`}
             >
               {isProcessing ? (
