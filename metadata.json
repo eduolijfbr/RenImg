@@ -1,0 +1,5 @@
+{
+  "name": "Photon Rename MVP",
+  "description": "A modern, minimalist batch image renaming application prototype featuring real-time preview, conflict detection, and pattern-based renaming logic.",
+  "requestFramePermissions": []
+}
